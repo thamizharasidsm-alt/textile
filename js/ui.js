@@ -9,8 +9,7 @@ V.head=(t,d,acts='')=>`<div class="head"><div><h1>${t}</h1>${d?`<p>${d}</p>`:''}
 V.card=(t,sub,body,cls='')=>`<section class="card ${cls}">${t?`<h3>${t}</h3>`:''}${sub?`<div class="sub">${sub}</div>`:''}${body}</section>`;
 V.opts=(list,sel,f)=>list.map(x=>{const v=f?f.v(x):x,l=f?f.l(x):x;return `<option value="${V.esc(v)}"${v===sel?' selected':''}>${V.esc(l)}</option>`}).join('');
 V.field=(l,inp,hint,cls='')=>`<div class="field ${cls}"><label>${l}</label>${inp}${hint?`<span class="hint">${hint}</span>`:''}</div>`;
-V.sw=(it,w,h)=>V.art.swatch(it,w,h);
-V.swp=(p,w,h)=>V.art.swatch(Object.assign({cn:V.m.item[p.sku].name},V.m.item[p.sku]),w,h);
+
 V.formVals=root=>{const o={};V.$$('[name]',root).forEach(e=>{o[e.name]=e.type==='checkbox'?e.checked:e.value});return o};
 
 // ---- KPI + sparkline

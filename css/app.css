@@ -268,3 +268,5 @@ a.btn svg{flex:none}
 .tour a:hover{transform:translateY(-3px);box-shadow:var(--shadow2);border-color:var(--gold)}
 .tour b{font-family:var(--f-num);font-size:26px;color:var(--gold);line-height:1;display:block}
 .tour span{font-size:13px;font-weight:600;display:block;margin-top:2px}.tour small{color:var(--mute);font-size:12px}
+.pcard img.sw,img.sw{display:block;object-fit:cover;width:100%;height:auto;background:var(--surface2)}
+.cline img.sw{width:54px;height:64px}
