@@ -1,11 +1,11 @@
 /* business logic — operates on V.db (localStorage-backed) */
 (function(){
 const L=V.L={};
-V.VER=10;
-const KEY='loomledger_demo_v'+V.VER;
+V.VER=11;
+const PFX='loomledger_demo_'+(V.basic?'basic_':'')+'v';const KEY=PFX+V.VER;
 V.save=()=>{try{localStorage.setItem(KEY,JSON.stringify(V.db))}catch(e){}};
 V.load=()=>{try{const s=localStorage.getItem(KEY);if(s){V.db=JSON.parse(s);L.idx();return}}catch(e){}V.db=null;V.seed();L.idx();V.save()};
-V.resetDemo=()=>{try{Object.keys(localStorage).filter(k=>(k.startsWith('loomledger_demo')||k.startsWith('vastrakosh_demo'))).forEach(k=>localStorage.removeItem(k))}catch(e){}location.hash='#/dashboard';location.reload()};
+V.resetDemo=()=>{try{Object.keys(localStorage).filter(k=>k.startsWith(PFX)).forEach(k=>localStorage.removeItem(k))}catch(e){}location.hash='#/dashboard';location.reload()};
 
 L.idx=()=>{const d=V.db;V.m={item:V.by(d.items,'sku'),vendor:V.by(d.vendors,'id'),cust:V.by(d.customers,'id'),loc:V.by(d.locations,'id'),user:V.by(d.users,'id'),piece:V.by(d.pieces,'u'),exh:V.by(d.exhibitions,'code'),weave:V.by(V.WEAVES,'code'),inv:V.by(d.invoices,'no'),po:V.by(d.pos,'no'),grn:V.by(d.grns,'no'),trf:V.by(d.transfers,'no')}};
 L.next=(key,pre,pad=5)=>{const s=V.db.seq;s[key]=(s[key]||0)+1;return pre+String(s[key]).padStart(pad,'0')};
@@ -129,7 +129,7 @@ L.salesReturn=({inv,lines,mode,refundMode,date,by,loc})=>{
 
 // ---- global search ---------------------------------------------------------------------------------------
 L.search=q=>{q=q.trim().toLowerCase();if(q.length<2)return[];const d=V.db,out=[];
-  d.pieces.forEach(p=>{if(out.length<40&&p.no.toLowerCase().includes(q)){const it=V.m.item[p.sku];out.push({t:'Serial',l:p.no,s:it.name+' · '+L.locName(p.loc),h:'#/trace/'+p.no})}});
+  d.pieces.forEach(p=>{if(out.length<40&&p.no.toLowerCase().includes(q)){const it=V.m.item[p.sku];out.push({t:'Serial',l:p.no,s:it.name+' · '+L.locName(p.loc),h:V.basic?'#/stock':'#/trace/'+p.no})}});
   d.invoices.slice().reverse().forEach(i=>{if(out.length<40&&i.no.toLowerCase().includes(q))out.push({t:'Invoice',l:i.no,s:V.inr(i.net)+' · '+V.fd(i.date),h:'#/invoices/'+encodeURIComponent(i.no)})});
   d.customers.forEach(c=>{if(out.length<40&&(c.name.toLowerCase().includes(q)||c.phone.includes(q)))out.push({t:'Customer',l:c.name,s:c.phone+' · '+c.city,h:'#/customers/'+c.id})});
   d.items.forEach(i=>{if(out.length<40&&(i.sku.toLowerCase().includes(q)||i.name.toLowerCase().includes(q)))out.push({t:'Design',l:i.sku,s:i.name,h:'#/items'})});

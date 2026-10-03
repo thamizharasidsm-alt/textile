@@ -10,7 +10,8 @@ const NAV=[
  ['Insights',[['reports','Reports Hub','chart'],['gst','GST & E-way','coins']]],
  ['Admin',[['approvals','Approvals','inbox'],['imports','Import Centre','upload'],['auditlog','Audit Trail','list'],['settings','Settings','gear']]]
 ];
-V.nav=NAV;
+const NAVF=NAV.map(g=>[g[0],g[1].filter(i=>!V.HIDE_ROUTES.includes(i[0]))]).filter(g=>g[1].length);
+V.nav=NAVF;
 const $=V.$;
 V.go=h=>{location.hash=h};
 V.refresh=()=>route();
@@ -22,7 +23,7 @@ function pill(id){const d=V.db;if(id==='approvals'){const n=d.approvals.filter(a
   if(id==='dashboard')return '';return ''}
 function renderSide(cur){
   $('#side').innerHTML=`<a class="brand" href="#/dashboard" aria-label="${V.esc(V.brand.name)} home"><span class="logo">${V.brandMark(42)}</span><span><b>${V.esc(V.brand.name)}</b><small>${V.esc(V.brand.tag)}</small></span></a><div class="temple" aria-hidden="true"></div>
-  <nav class="nav">${NAV.map(g=>`<h6>${g[0]}</h6>${g[1].map(i=>`<a href="#/${i[0]}" class="${cur===i[0]?'on':''}" ${cur===i[0]?'aria-current="page"':''}>${V.ic(i[2])}<span>${i[1]}</span>${pill(i[0])}</a>`).join('')}`).join('')}</nav>
+  <nav class="nav">${NAVF.map(g=>`<h6>${g[0]}</h6>${g[1].map(i=>`<a href="#/${i[0]}" class="${cur===i[0]?'on':''}" ${cur===i[0]?'aria-current="page"':''}>${V.ic(i[2])}<span>${i[1]}</span>${pill(i[0])}</a>`).join('')}`).join('')}</nav>
   <div class="side-foot">${V.esc(V.brand.business)}<br><span style="opacity:.75">${V.brand.by?'Powered by '+V.esc(V.brand.by)+' · ':''}Demo · data stays in your browser</span></div>`}
 function renderTop(title,crumb){
   const locs=V.locOptions();
@@ -35,7 +36,7 @@ function renderTop(title,crumb){
 
 function route(){
   const h=(location.hash||'#/dashboard').replace(/^#\//,'');let [name,...args]=h.split('/').map(decodeURIComponent);if(['grn','invoices','sreturn'].includes(name)&&args.length>1)args=[args.join('/')];
-  const pg=V.pages[name]||V.pages.dashboard,cur=V.pages[name]?name:'dashboard';
+  const okR=V.pages[name]&&!V.HIDE_ROUTES.includes(name);const pg=okR?V.pages[name]:V.pages.dashboard,cur=okR?name:'dashboard';
   V.destroyCharts();V.L.idx();document.body.classList.remove('nav-open');
   renderSide(cur);
   const t=typeof pg.title==='function'?pg.title(...args):pg.title;renderTop(t,pg.crumb);
@@ -43,7 +44,7 @@ function route(){
   try{v.innerHTML=pg.render(...args)}catch(e){console.error(e);v.innerHTML=`<div class="card"><h3>Something went wrong</h3><p class="mute">${V.esc(e.message)}</p></div>`}
   v.classList.remove('fade');void v.offsetWidth;v.classList.add('fade');
   try{pg.mount&&pg.mount(...args)}catch(e){console.error(e)}
-  V.countUp(v);window.scrollTo(0,0);
+  V.unlink(v);V.countUp(v);window.scrollTo(0,0);
 }
 
 // ---- global events
