@@ -1,7 +1,7 @@
 /* business logic — operates on V.db (localStorage-backed) */
 (function(){
 const L=V.L={};
-V.VER=11;
+V.VER=12;
 const PFX='loomledger_demo_'+(V.basic?'basic_':'')+'v';const KEY=PFX+V.VER;
 V.save=()=>{try{localStorage.setItem(KEY,JSON.stringify(V.db))}catch(e){}};
 V.load=()=>{try{const s=localStorage.getItem(KEY);if(s){V.db=JSON.parse(s);L.idx();return}}catch(e){}V.db=null;V.seed();L.idx();V.save()};
@@ -74,7 +74,7 @@ L.drawerCalc=r=>{const sales=L.cashSales(r.loc,r.date),ref=L.cashRefunds(r.loc,r
 V.DENOM=[2000,500,200,100,50,20,10];
 L.closeDrawer=(r,{counted,denom,by,note,time})=>{const c=L.drawerCalc(r);r.closing={counted,denom:denom||{},expected:c.expected,variance:counted-c.expected,by:by||V.S.user,time:time||V.now(),note:note||'',deposit:Math.max(0,counted-r.float)};r.status='closed';L.audit('Day-end closed',r.id,by,r.date,time)};
 L.pettyAdd=({loc,date,head,desc,amt,type='expense',by,bill='',fromDrawer=false,time})=>{
-  const p={id:L.next('pc','PC-',5),loc,date,head,desc,amt,type,by:by||V.S.user,bill,approvedBy:amt>2000?'U02':'',time:time||V.now()};V.db.petty.push(p);
+  const p={id:L.next('pc','PC-',5),loc,date,head,desc,amt,type,by:by||V.S.user,bill,approvedBy:amt>2000?(V.S.user||'U02'):'',time:time||V.now()};V.db.petty.push(p);
   if(type==='topup'){const r=L.drawer(loc,date);if(r.status==='open')r.entries.push({t:'out',amt,reason:'Petty cash top-up '+p.id,time:p.time,by:p.by})}return p};
 L.pettyBal=loc=>V.sum(V.db.petty.filter(p=>p.loc===loc),p=>p.type==='topup'?p.amt:-p.amt);
 

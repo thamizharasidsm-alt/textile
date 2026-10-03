@@ -10,8 +10,9 @@ const NAV=[
  ['Insights',[['reports','Reports Hub','chart'],['gst','GST & E-way','coins']]],
  ['Admin',[['approvals','Approvals','inbox'],['imports','Import Centre','upload'],['auditlog','Audit Trail','list'],['settings','Settings','gear']]]
 ];
-const NAVF=NAV.map(g=>[g[0],g[1].filter(i=>!V.HIDE_ROUTES.includes(i[0]))]).filter(g=>g[1].length);
-V.nav=NAVF;
+V.NAVALL=NAV;
+V.navFor=()=>NAV.map(g=>[g[0],g[1].filter(i=>!V.HIDE_ROUTES.includes(i[0])&&(i[0]==='dashboard'||V.can(i[0])))]).filter(g=>g[1].length);
+V.nav=NAV.map(g=>[g[0],g[1].filter(i=>!V.HIDE_ROUTES.includes(i[0]))]).filter(g=>g[1].length);
 const $=V.$;
 V.go=h=>{location.hash=h};
 V.refresh=()=>route();
@@ -23,7 +24,7 @@ function pill(id){const d=V.db;if(id==='approvals'){const n=d.approvals.filter(a
   if(id==='dashboard')return '';return ''}
 function renderSide(cur){
   $('#side').innerHTML=`<a class="brand" href="#/dashboard" aria-label="${V.esc(V.brand.name)} home"><span class="logo">${V.brandMark(42)}</span><span><b>${V.esc(V.brand.name)}</b><small>${V.esc(V.brand.tag)}</small></span></a><div class="temple" aria-hidden="true"></div>
-  <nav class="nav">${NAVF.map(g=>`<h6>${g[0]}</h6>${g[1].map(i=>`<a href="#/${i[0]}" class="${cur===i[0]?'on':''}" ${cur===i[0]?'aria-current="page"':''}>${V.ic(i[2])}<span>${i[1]}</span>${pill(i[0])}</a>`).join('')}`).join('')}</nav>
+  <nav class="nav">${V.navFor().map(g=>`<h6>${g[0]}</h6>${g[1].map(i=>`<a href="#/${i[0]}" class="${cur===i[0]?'on':''}" ${cur===i[0]?'aria-current="page"':''}>${V.ic(i[2])}<span>${i[1]}</span>${pill(i[0])}</a>`).join('')}`).join('')}</nav>
   <div class="side-foot">${V.esc(V.brand.business)}<br><span style="opacity:.75">${V.brand.by?'Powered by '+V.esc(V.brand.by)+' · ':''}Demo · data stays in your browser</span></div>`}
 function renderTop(title,crumb){
   const locs=V.locOptions();
@@ -32,11 +33,11 @@ function renderTop(title,crumb){
   <label class="locsel" title="Working location (POS, stock, drawer)">${V.ic('pin')}<select id="locsel" aria-label="Working location">${locs.map(l=>`<option value="${l.id}" ${l.id===V.S.loc?'selected':''}>${V.esc(l.name)}</option>`).join('')}</select></label>
   <span class="datechip">${V.ic('cal')} ${V.fd(V.db.today)}</span>
   <button class="iconbtn" data-act="theme" aria-label="Toggle dark mode">${V.ic(document.documentElement.getAttribute('data-theme')==='dark'?'sun':'moon')}</button>
-  <div class="avatar" title="Meenakshi Iyer · Owner">MI</div>`}
+  ${V.userMenuHtml()}`}
 
 function route(){
   const h=(location.hash||'#/dashboard').replace(/^#\//,'');let [name,...args]=h.split('/').map(decodeURIComponent);if(['grn','invoices','sreturn'].includes(name)&&args.length>1)args=[args.join('/')];
-  const okR=V.pages[name]&&!V.HIDE_ROUTES.includes(name);const pg=okR?V.pages[name]:V.pages.dashboard,cur=okR?name:'dashboard';
+  const exists=V.pages[name]&&!V.HIDE_ROUTES.includes(name),okR=exists&&(name==='dashboard'||V.can(name));const pg=!exists?V.pages.dashboard:okR?V.pages[name]:V.deniedPage(name),cur=okR?name:(exists?'':'dashboard');
   V.destroyCharts();V.L.idx();document.body.classList.remove('nav-open');
   renderSide(cur);
   const t=typeof pg.title==='function'?pg.title(...args):pg.title;renderTop(t,pg.crumb);
@@ -57,6 +58,7 @@ document.addEventListener('click',e=>{
   const p=t.closest('[data-pg]');if(p){const [id,d]=p.dataset.pg.split(':');V.tbl[id].page+=+d;V.tblRefresh(id);return}
   const r=t.closest('[data-row]');if(r&&!t.closest('a,button,input,select')){const [id,i]=r.dataset.row.split(':');const st=V.tbl[id];st.cfg.onRow(st.view[+i]);return}
   const hf=t.closest('[data-href]');if(hf){V.go(hf.dataset.href);return}
+  if(!t.closest('.umw')&&$('#umenu'))$('#umenu').hidden=true;
   if(!t.closest('.search'))$('#sres')&&($('#sres').hidden=true);
 });
 document.addEventListener('keydown',e=>{
@@ -81,7 +83,8 @@ window.addEventListener('hashchange',route);
 V.boot=()=>{
   V.S.user='U01';try{V.S.loc=localStorage.getItem('vk_loc')||'MAIN'}catch(e){V.S.loc='MAIN'}
   V.load();if(!V.m.loc[V.S.loc]||V.m.loc[V.S.loc].status==='Planned')V.S.loc='MAIN';
-  route();
+  V.enter=()=>{document.body.classList.remove('locked');const l=document.getElementById('login');if(l)l.remove();route()};
+  if(V.authInit())V.enter();else V.showLogin();
 };
 window.addEventListener('DOMContentLoaded',()=>{try{V.boot()}catch(e){console.error(e);document.body.insertAdjacentHTML('afterbegin',`<pre style="padding:20px;color:#b3261e">Boot error: ${V.esc(e.stack||e.message)}</pre>`)}});
 })();

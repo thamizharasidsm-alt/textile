@@ -1,37 +1,37 @@
-# LoomLedger — Basic Edition
-*Inventory, POS billing, exhibitions & Shopify export for premium handloom saree retailers · by MS Tech Services*
+# LoomLedger — Heritage Saree Inventory, POS & Shopify Sync
+*A product of MS Tech Services · white-label ready · interactive demo (runs fully in the browser)*
 
-Interactive demo of the **Basic package**. Runs entirely in the browser (data lives in `localStorage`), so every visitor gets a private copy to click through.
+Two editions share one code base; `js/edition.js` decides which one is built:
+`V.EDITION='basic'` (first-demo package) or `'premium'` (everything). Premium features are hidden, never locked.
 
-## What's in the Basic package
-| Area | Included |
-|---|---|
-| **Masters** | Items (serial-tracked), vendors/weavers, customers, locations & plants (state-wise GSTIN), **Exhibition Master** with a unique code per exhibition, users |
-| **Procurement** | Purchase orders (manual + **Excel/CSV upload with validation**), **GRN with QC and auto-generated serial numbers + printable tags**, purchase returns with debit note, local purchase |
-| **Inventory** | Stock explorer, stock transfer (with challan), **exhibition reconciliation** (balance returns to Main), damage write-off & quarantine |
-| **POS & Cash** | POS billing (scan/search, split payments, discounts, hold/resume), GST invoices, sales returns & exchanges with credit notes, **cash drawer, day-end / Z-report, petty cash** |
-| **Shopify** | Sync queue + **file export** (orders, inventory, customers) in Shopify import format |
-| **Reports** | 30 essential reports with filters, charts and CSV / Excel / print export |
+## Demo flow (start from scratch)
+1. **Sign in** — pick a demo user or type credentials (demo password for all accounts: `demo123`). Each role sees only its own menus; the Owner can add users, create roles and assign menus under **Users & Roles**.
+2. **Settings → Data management → Wipe transactions** (type `WIPE`). Stock, sales and every record go to zero; masters, users and roles stay. *Wipe everything* also clears items, vendors and customers (then press **Load sample masters**). **Reset to default** restores the full sample data at any time.
+3. **Purchase Orders → Upload PO** with `samples/Sample_PO_Upload.csv` (or the in-app *Sample PO* download / *Use sample file*).
+4. **GRN** → pick the PO → QC → serial numbers + tags.
+5. **Exhibition Master → Go live**, **Stock Transfer** Main → exhibition plant (receive it), switch location in the top bar and **bill** from the plant.
+6. **Reconcile** the exhibition (balance returns to Main) → **Day End** → **Shopify** file export → **Reports**.
 
-### 7-step demo script
-1. **Purchase Orders → Upload PO (Excel)** → *Use sample file* → note the validation errors → *Create POs*.
-2. **GRN** → choose the PO → receive, reject one piece → *Post* → serial numbers + **Print tags**.
-3. **POS Billing** → tap sarees → split Cash + UPI → *Complete sale* → GST invoice.
-4. **Exhibition Master → Festive Weaves Hyderabad** (live) → switch location in the top bar and bill from the exhibition plant.
-5. **Close exhibition → Reconcile** → mark damaged / missing → *Post* → stock returns to Main.
-6. **Cash Drawer → Day End** → count denominations → close → Z-report.
-7. **Shopify Sync → File export** → download orders / inventory / customers · **Reports Hub**.
-
-*Settings → Reset demo data* restores the original dataset.
+## Feature map
+| Area | Basic | Premium adds |
+|---|---|---|
+| Access | Login, users, roles & per-role menu access | — |
+| Masters | Items (serial), vendors, customers, locations, exhibitions (unique code each) | Batch tracking, ratings, tiers & loyalty, targets/P&L |
+| Procurement | PO + Excel upload, GRN with serials & tags, purchase returns, local purchase | PO approvals, direct GRN, vendor ledger, batch numbering |
+| Inventory | Stock list, transfer + challan, exhibition reconciliation, damage write-off | Gallery, serial trace, stock audit, e-way bills, labels page, repricing |
+| POS & cash | Billing, GST invoices, sales returns, cash drawer, day-end, petty cash | Manager-PIN overrides, bookings/holds/trials, WhatsApp share |
+| Shopify | File export + queue | API-style console, mapping, retry, payload viewer |
+| Reports | 30 essential | all 117 |
+| Admin | Settings, data wipe/reset | Approvals, import centre, audit trail, GST & e-way |
+| Photos | Optional product photos (Settings toggle) | same |
 
 ## Run locally
 ```bash
 python -m http.server 8080   # then open http://localhost:8080
 ```
 
-## Editions & white-labelling (internal notes)
-- The edition is set in `js/edition.js` (`V.EDITION='basic'`). The full product keeps every module and all 117 reports (`main` branch); Basic hides premium screens, columns and reports entirely.
-- Branding (name, tagline, logo, colours) is configurable. In the Basic build the branding panel is an internal tool — open **Settings** with `?admin` in the URL (e.g. `…/index.html?admin#/settings`). Defaults live in `js/brand.js`.
+## White-label
+Name, tagline, logo, colours, client business and owner name are configurable (Settings → White-label branding; in the Basic build open Settings with `?admin` in the URL). Defaults live in `js/brand.js`.
 
 ## Tech
-Vanilla JS, Chart.js and SheetJS from cdnjs, Google Fonts. No build step; hash routing; relative paths so it works under any GitHub Pages sub-path.
+Vanilla JS, Chart.js and SheetJS from cdnjs, Google Fonts. No build step; hash routing; relative paths so it works under any GitHub Pages sub-path. Data and sessions live in `localStorage` (authentication is demo-grade, not for production).

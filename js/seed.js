@@ -169,6 +169,7 @@ V.seed=function(){
   // sessions
   for(let i=0;i<30;i++){const u=pick(db.users);db.sessions.push({t:ad(today,-Math.floor(i/3))+' '+String(rnd(9,10)).padStart(2,'0')+':'+String(rnd(0,59)).padStart(2,'0'),user:u.id,ev:i%11===4?'Failed login':'Login',ip:'49.37.'+rnd(10,250)+'.'+rnd(1,250),dev:pick(['Chrome · Windows','Edge · Windows','Safari · iPad','Chrome · Android'])})}
   db.exports.push({t:ad(today,-3)+' 21:10',user:'U06',kind:'Orders CSV (Shopify format)',rows:41,file:'shopify_orders_'+ad(today,-3)+'.csv'},{t:ad(today,-9)+' 20:55',user:'U06',kind:'Inventory levels CSV',rows:96,file:'shopify_inventory_'+ad(today,-9)+'.csv'});
+  V.initRoles(db);
   db.audit.sort((a,b)=>a.t<b.t?-1:1);
   return db;
 };
