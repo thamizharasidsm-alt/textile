@@ -270,3 +270,5 @@ a.btn svg{flex:none}
 .tour span{font-size:13px;font-weight:600;display:block;margin-top:2px}.tour small{color:var(--mute);font-size:12px}
 .pcard img.sw,img.sw{display:block;object-fit:cover;width:100%;height:auto;background:var(--surface2)}
 .cline img.sw{width:54px;height:64px}
+.cline{grid-template-columns:auto 1fr auto}.pcard:not(:has(.sw)) .inf{padding-top:12px}
+.cline:has(>div:first-child:empty){grid-template-columns:1fr auto}.cline>div:first-child:empty{display:none}
