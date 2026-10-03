@@ -34,7 +34,7 @@ function renderTop(title,crumb){
   <div class="avatar" title="Meenakshi Iyer · Owner">MI</div>`}
 
 function route(){
-  const h=(location.hash||'#/dashboard').replace(/^#\//,'');const [name,...args]=h.split('/').map(decodeURIComponent);
+  const h=(location.hash||'#/dashboard').replace(/^#\//,'');let [name,...args]=h.split('/').map(decodeURIComponent);if(['grn','invoices','sreturn'].includes(name)&&args.length>1)args=[args.join('/')];
   const pg=V.pages[name]||V.pages.dashboard,cur=V.pages[name]?name:'dashboard';
   V.destroyCharts();V.L.idx();document.body.classList.remove('nav-open');
   renderSide(cur);
