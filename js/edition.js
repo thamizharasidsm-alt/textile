@@ -1,5 +1,5 @@
 /* Edition switch: 'basic' (first-demo package) or 'premium' (everything). Premium features are hidden, not locked. */
-V.EDITION='premium';
+V.EDITION='basic';
 V.basic=V.EDITION==='basic';
 V.HIDE_ROUTES=V.basic?['vledger','trace','audit','bookings','gst','approvals','imports','auditlog','labels']:[];
 // Reports included in the Basic edition (by report number)
