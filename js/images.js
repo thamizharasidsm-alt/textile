@@ -2,7 +2,8 @@
 (function(){
 V.imgOn=()=>!!(V.db&&V.db.settings&&V.db.settings.images);
 V.imgTag=(it,w,h)=>`<img class="sw" src="${it.img}" alt="${V.esc(it.cn||it.name||'Saree')}" loading="lazy" style="aspect-ratio:${w}/${h};object-fit:cover">`;
-V.sw=(it,w,h)=>V.imgOn()&&it.img?V.imgTag(it,w,h):V.art.swatch(it,w,h);
+// Photos disabled => no item imagery anywhere. Enabled => photo, or the generated swatch as placeholder.
+V.sw=(it,w,h)=>!V.imgOn()?'':it.img?V.imgTag(it,w,h):V.art.swatch(it,w,h);
 V.swp=(p,w,h)=>{const it=V.m.item[p.sku];return V.sw(Object.assign({cn:it.name},it),w,h)};
 V.imgResize=(file,max=520)=>new Promise((res,rej)=>{const r=new FileReader();r.onerror=rej;r.onload=()=>{const im=new Image();im.onerror=rej;im.onload=()=>{const s=Math.min(1,max/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=Math.round(im.width*s);c.height=Math.round(im.height*s);const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);x.drawImage(im,0,0,c.width,c.height);res(c.toDataURL('image/jpeg',.82))};im.src=r.result};r.readAsDataURL(file)});
 const count=()=>V.db.items.filter(i=>i.img).length;
