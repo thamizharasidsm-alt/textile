@@ -1,6 +1,6 @@
 /* White-label branding: name, tagline, logo, colours — persisted separately from demo data */
 (function(){
-const KEY='lk_brand';
+const KEY='lk_brand'+(V.basic?'_basic':'');
 const DEF={name:'LoomLedger',tag:'Heritage Retail Suite',by:'MS Tech Services',business:'Meenakshi Heritage Handlooms',mono:'LL',primary:'#7A1F3D',accent:'#B8893A',logo:''};
 V.BRAND_DEF=DEF;
 V.brand=Object.assign({},DEF);

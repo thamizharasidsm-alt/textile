@@ -33,7 +33,7 @@ V.tblBody=id=>{const st=V.tbl[id],cfg=st.cfg,all=V.tblRows(id),ps=cfg.pageSize||
   let foot='';if(cfg.totals){foot=`<tfoot><tr>${cfg.cols.map((c,i)=>{if(cfg.totals.includes(c.k)){const t=V.sum(all,r=>+raw(c,r)||0);return `<td class="n">${c.fmt==='inr'?V.inr(t):V.num(t)}</td>`}return `<td>${i===0?'Total ('+all.length+')':''}</td>`}).join('')}</tr></tfoot>`}
   return `<div class="tscroll"><table class="t"><thead><tr>${th}</tr></thead><tbody>${tr||`<tr><td colspan="${cfg.cols.length}"><div class="empty">${V.art.empty()}<div>${cfg.empty||'Nothing to show for these filters.'}</div></div></td></tr>`}</tbody>${foot}</table></div>
   <div class="pager"><span>${all.length?st.page*ps+1:0}–${Math.min(all.length,st.page*ps+ps)} of ${V.num(all.length)}</span><button data-pg="${id}:-1" ${st.page<=0?'disabled':''} aria-label="Previous page">‹</button><button data-pg="${id}:1" ${st.page>=pages-1?'disabled':''} aria-label="Next page">›</button></div>`};
-V.tblRefresh=id=>{const el=V.$('#tt-'+id);if(el)el.innerHTML=V.tblBody(id)};
+V.tblRefresh=id=>{const el=V.$('#tt-'+id);if(el){el.innerHTML=V.tblBody(id);V.unlink(el)}};
 V.csvOf=(cols,rows)=>{const e=v=>{v=String(v??'');return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v};return [cols.map(c=>e(c.l)).join(','),...rows.map(r=>cols.map(c=>e(raw(c,r))).join(','))].join('\n')};
 V.dl=(name,text,mime='text/csv')=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type:mime+';charset=utf-8'}));a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500)};
 V.xlsx=(name,cols,rows)=>{if(!window.XLSX){V.dl(name.replace(/\.xlsx$/,'.csv'),V.csvOf(cols,rows));return}const ws=XLSX.utils.aoa_to_sheet([cols.map(c=>c.l),...rows.map(r=>cols.map(c=>raw(c,r)))]);const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Data');XLSX.writeFile(wb,name)};
@@ -45,7 +45,7 @@ V.printCss=`body{font:12.5px/1.5 Inter,Arial,sans-serif;color:#222;margin:18px}h
 V._mfn=[];
 V.modal=({title,body,wide,xl,foot=[],onOpen})=>{V.closeModal();V._mfn=foot.map(f=>f.fn);
   const h=`<div class="modal-bg" id="mbg" role="dialog" aria-modal="true" aria-label="${V.esc(title)}"><div class="modal ${xl?'xl':wide?'wide':''}"><header><h3>${title}</h3><button class="iconbtn" data-act="closeModal" aria-label="Close dialog">${V.ic('x')}</button></header><div class="mb">${body}</div>${foot.length?`<footer>${foot.map((f,i)=>`<button class="btn ${f.cls||''}" data-mfn="${i}">${f.l}</button>`).join('')}</footer>`:''}</div></div>`;
-  V.$('#modal-root').innerHTML=h;V._prevFocus=document.activeElement;const f=V.$('#mbg input,#mbg select,#mbg button.btn.primary');if(f)f.focus();if(onOpen)onOpen(V.$('#mbg'))};
+  V.$('#modal-root').innerHTML=h;V.unlink(V.$('#modal-root'));V._prevFocus=document.activeElement;const f=V.$('#mbg input,#mbg select,#mbg button.btn.primary');if(f)f.focus();if(onOpen)onOpen(V.$('#mbg'))};
 V.closeModal=()=>{V.$('#modal-root').innerHTML='';V._mfn=[];if(V._prevFocus&&V._prevFocus.focus)try{V._prevFocus.focus()}catch(e){}};
 V.confirm=(msg,ok='Confirm',danger)=>new Promise(res=>V.modal({title:'Please confirm',body:`<p style="margin:0">${msg}</p>`,foot:[{l:'Cancel',fn:()=>{res(false)}},{l:ok,cls:danger?'danger':'primary',fn:()=>{res(true)}}]}));
 V.toast=(msg,k='ok')=>{const t=document.createElement('div');t.className='toast '+k;t.setAttribute('role','status');t.innerHTML=`${V.ic(k==='bad'?'alert':'check')}<span>${msg}</span>`;V.$('#toast-root').appendChild(t);setTimeout(()=>t.remove(),3800)};
