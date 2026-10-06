@@ -74,7 +74,38 @@ V.invoiceHtml=inv=>{const lo=V.m.loc[inv.loc],c=inv.cust?V.m.cust[inv.cust]:null
  <table style="margin-top:10px"><thead><tr><th>#</th><th>Description / Serial</th><th>HSN</th><th class="r">Qty</th><th class="r">MRP</th><th class="r">Disc</th><th class="r">Taxable</th><th class="r">GST</th><th class="r">Amount</th></tr></thead><tbody>${inv.lines.map((l,i)=>`<tr><td>${i+1}</td><td>${V.esc(l.name)}<br><span style="font-family:monospace;font-size:11px">${l.no}</span></td><td>${l.hsn}</td><td class="r">${l.qty}</td><td class="r">${V.inr(l.mrp)}</td><td class="r">${l.disc?V.inr(l.disc):'—'}</td><td class="r">${V.inr(l.taxable)}</td><td class="r">${l.gst}%</td><td class="r">${V.inr(l.net)}</td></tr>`).join('')}</tbody></table>
  <div class="row between mt" style="align-items:flex-start"><div style="max-width:55%"><b>Payment</b><br>${inv.pays.map(p=>`${p.mode} ${V.inr(p.amt)}${p.ref?' ('+V.esc(p.ref)+')':''}`).join(' · ')}${inv.change?`<br>Change returned ${V.inr(inv.change)}`:''}<br><br><i>${V.words(inv.net)} Rupees Only</i></div><table style="width:280px"><tr><td>Taxable value</td><td class="r">${V.inr(inv.taxable)}</td></tr>${inv.inter?`<tr><td>IGST</td><td class="r">${V.inr(inv.igst)}</td></tr>`:`<tr><td>CGST</td><td class="r">${V.inr(inv.cgst)}</td></tr><tr><td>SGST</td><td class="r">${V.inr(inv.sgst)}</td></tr>`}<tr><td>Discount given</td><td class="r">${V.inr(inv.disc)}</td></tr><tr><td><b>Grand total</b></td><td class="r"><b style="font-size:16px">${V.inr(inv.net)}</b></td></tr></table></div>
  <div class="temple"></div><div class="row between" style="font-size:11px;color:#555"><span>Handloom Mark / Silk Mark certified pieces. Exchange within 7 days with tags intact. Subject to ${lo.city} jurisdiction.</span><span>${V.art.qr(inv.no,17,2)}</span></div></div>`};
-V.showInvoice=(no,fresh)=>{const inv=V.m.inv[no];V.modal({title:fresh?'✓ Sale completed — '+inv.no:inv.no,xl:true,body:V.invoiceHtml(inv),foot:[...(V.basic?[]:[{l:'WhatsApp / Email',fn:()=>{V.toast('Invoice link shared with '+(inv.cust?V.m.cust[inv.cust].phone:'customer')+' (demo)');return false}}]),{l:'Sales return',fn:()=>{setTimeout(()=>V.acts.srNew(null,inv.no),50)}},{l:'Print',fn:()=>{V.printHtml(V.invoiceHtml(inv),inv.no);return false}},{l:fresh?'New bill':'Close',cls:'primary',fn:()=>{if(fresh)V.refresh()}}]})};
+// ---- 40-column thermal receipt ---------------------------------------------------------------
+V.THERMAL_W=40;
+V.thermalCss=`@page{size:80mm auto;margin:0}html,body{margin:0;padding:0;background:#fff}pre{margin:0;padding:3mm 3mm 6mm;font:12px/1.28 'Courier New',Courier,monospace;color:#000;white-space:pre;width:40ch}`;
+V.thermalText=inv=>{const W=V.THERMAL_W,lo=V.m.loc[inv.loc],c=inv.cust?V.m.cust[inv.cust]:null;
+ const n2=v=>(+v||0).toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2});
+ const cen=t=>{t=String(t);return t.length>=W?t.slice(0,W):' '.repeat(Math.floor((W-t.length)/2))+t};
+ const lr=(l,r)=>{l=String(l);r=String(r);const sp=W-l.length-r.length;return sp>=1?l+' '.repeat(sp)+r:l.slice(0,Math.max(0,W-r.length-1))+' '+r};
+ const wrap=(t,w=W)=>{const out=[];let cur='';String(t).split(/\s+/).filter(Boolean).forEach(wd=>{while(wd.length>w){if(cur){out.push(cur);cur=''}out.push(wd.slice(0,w));wd=wd.slice(w)}if(!cur)cur=wd;else if((cur+' '+wd).length<=w)cur+=' '+wd;else{out.push(cur);cur=wd}});if(cur)out.push(cur);return out};
+ const EQ='='.repeat(W),DS='-'.repeat(W),L=[];
+ wrap(V.brand.business.toUpperCase()).forEach(x=>L.push(cen(x.trim())));wrap(lo.name).forEach(x=>L.push(cen(x.trim())));L.push(cen('GSTIN '+lo.gstin));L.push(cen(lo.state));
+ L.push(EQ,cen('TAX INVOICE'),EQ);
+ L.push('Inv : '+inv.no);const d=inv.date.split('-');L.push(lr('Date: '+d[2]+'-'+d[1]+'-'+d[0],inv.time));
+ L.push('Cashier: '+V.L.userName(inv.cashier).slice(0,29));
+ L.push('Cust: '+(c?c.name:'Walk-in customer').slice(0,34));if(c&&c.phone)L.push('Ph  : '+c.phone);if(c&&c.gstin)L.push('GSTIN: '+c.gstin);
+ L.push(EQ,lr('Item','Amount'),DS);
+ let qty=0;
+ inv.lines.forEach(l=>{qty+=l.qty;wrap(l.name).forEach(x=>L.push(x));L.push(' '+l.no+'  HSN '+l.hsn);L.push(lr(' '+l.qty+' x '+n2(l.mrp),n2(l.mrp*l.qty)));if(l.disc)L.push(lr(' Discount','-'+n2(l.disc)))});
+ L.push(DS,lr('Subtotal (MRP)',n2(inv.sub)));if(inv.disc)L.push(lr('Discount','-'+n2(inv.disc)));L.push(lr('Taxable value',n2(inv.taxable)));
+ const rt={};inv.lines.forEach(l=>{const o=rt[l.gst]||(rt[l.gst]={tb:0,tx:0});o.tb+=l.taxable;o.tx+=l.tax});
+ Object.keys(rt).sort((a,b)=>a-b).forEach(r=>{const o=rt[r];if(inv.inter)L.push(lr('IGST '+r+'%',n2(o.tx)));else{L.push(lr('CGST '+(r/2)+'%',n2(o.tx/2)));L.push(lr('SGST '+(r/2)+'%',n2(o.tx/2)))}});
+ L.push(EQ,lr('TOTAL',n2(inv.net)),EQ);
+ L.push('Payment:');inv.pays.forEach(p=>L.push(lr(' '+p.mode+(p.ref?' ('+String(p.ref).slice(-6)+')':''),n2(p.amt))));if(inv.change)L.push(lr(' Change returned',n2(inv.change)));
+ L.push(DS);wrap('Rupees '+V.words(inv.net)+' only').forEach(x=>L.push(x));
+ L.push(DS,lr('Items: '+inv.lines.length,'Qty: '+qty),EQ);
+ wrap('Thank you for choosing handloom. Exchange within 7 days with tags intact.').forEach(x=>L.push(cen(x.trim())));
+ L.push(cen('Subject to '+lo.city+' jurisdiction'));if(V.brand.by)L.push('',cen('Powered by '+V.brand.by));
+ return L.join('\n')};
+V.showInvoice=(no,fresh)=>{const inv=V.m.inv[no],pf=V.S.pf||'thermal',th=pf==='thermal';
+ const seg=`<div class="row between noprint" style="margin-bottom:14px"><div class="seg" role="group" aria-label="Receipt format"><button class="${th?'on':''}" data-act="pfSet" data-f="thermal" data-no="${V.esc(no)}" data-fresh="${fresh?1:0}">${V.ic('receipt')} Thermal · 40 col</button><button class="${th?'':'on'}" data-act="pfSet" data-f="a4" data-no="${V.esc(no)}" data-fresh="${fresh?1:0}">${V.ic('file')} A4 invoice</button></div><span class="xs mute">${th?'POS roll · 80 mm · 40 characters per line':'Full GST tax invoice'}</span></div>`;
+ V.modal({title:fresh?'✓ Sale completed — '+inv.no:inv.no,xl:!th,wide:th,body:seg+(th?`<div class="thermal-wrap"><pre class="thermal">${V.esc(V.thermalText(inv))}</pre></div>`:V.invoiceHtml(inv)),
+  foot:[...(V.basic?[]:[{l:'WhatsApp / Email',fn:()=>{V.toast('Invoice link shared with '+(inv.cust?V.m.cust[inv.cust].phone:'customer')+' (demo)');return false}}]),{l:'Sales return',fn:()=>{setTimeout(()=>V.acts.srNew(null,inv.no),50)}},{l:'Print A4',fn:()=>{V.printHtml(V.invoiceHtml(inv),inv.no);return false}},{l:'Print thermal',cls:th?'gold':'',fn:()=>{V.printHtml('<pre>'+V.esc(V.thermalText(inv))+'</pre>',inv.no,V.thermalCss);return false}},{l:fresh?'New bill':'Close',cls:'primary',fn:()=>{if(fresh)V.refresh()}}]})};
+V.acts.pfSet=el=>{V.S.pf=el.dataset.f;V.showInvoice(el.dataset.no,el.dataset.fresh==='1')};
 
 // ================= INVOICES =================
 V.page('invoices',{title:'Invoices',crumb:'POS & Cash',

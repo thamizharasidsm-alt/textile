@@ -24,6 +24,7 @@ Two editions share one code base; `js/edition.js` decides which one is built:
 | Reports | 30 essential | all 117 |
 | Admin | Settings, data wipe/reset | Approvals, import centre, audit trail, GST & e-way |
 | Photos | Optional product photos (Settings toggle) | same |
+| Pricing & print | GRN pricing: cost price + markup (% or ₹) → selling price + GST → auto final MRP (rounding option); 40-column thermal receipt (80 mm) and A4 invoice | same |
 
 ## Run locally
 ```bash
