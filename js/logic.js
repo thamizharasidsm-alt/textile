@@ -1,7 +1,7 @@
 /* business logic — operates on V.db (localStorage-backed) */
 (function(){
 const L=V.L={};
-V.VER=12;
+V.VER=13;
 const PFX='loomledger_demo_'+(V.basic?'basic_':'')+'v';const KEY=PFX+V.VER;
 V.save=()=>{try{localStorage.setItem(KEY,JSON.stringify(V.db))}catch(e){}};
 V.load=()=>{try{const s=localStorage.getItem(KEY);if(s){V.db=JSON.parse(s);L.idx();return}}catch(e){}V.db=null;V.seed();L.idx();V.save()};
@@ -16,9 +16,12 @@ L.locName=id=>(V.m.loc[id]||{}).name||id;
 L.userName=id=>(V.m.user[id]||{}).name||id||'—';
 
 // ---- serial / batch numbers -------------------------------------------------
-L.serKey=(it,date,mode)=>{const ym=date.slice(2,4)+date.slice(5,7);return (mode||it.trk)==='batch'?{key:'bt'+ym+date.slice(8,10)+it.sku,pre:'BT-'+ym+date.slice(8,10)+'-'+it.sku.split('-')[1]+'-',pad:2}:{key:'sr'+it.weave+ym,pre:it.weave+'-'+ym+'-',pad:5}};
-L.peek=(it,date,n=1,mode)=>{const k=L.serKey(it,date,mode),s=V.db.seq[k.key]||0;return Array.from({length:n},(_,i)=>k.pre+String(s+i+1).padStart(k.pad,'0'))};
-L.serial=(it,date,mode)=>{const k=L.serKey(it,date,mode);return L.next(k.key,k.pre,k.pad)};
+// Serial no. = TYPE-VENDOR-WEAVER-YEAR-DEFAULT-RUNNING  e.g. AB-129-S22-Y-I-17490
+L.yc=date=>{const y=+date.slice(0,4),m=(V.db.settings.yearCodes||{})[y];return m||String.fromCharCode(65+(((y-2002)%26)+26)%26)};
+L.sCode=(it,date,vendor,run)=>{const v=V.m.vendor[vendor]||{};return [String(it.type||'XX').toUpperCase(),v.vno||'000',String(v.wcode||'S00').toUpperCase(),L.yc(date),String(V.db.settings.serialDefault||'I').toUpperCase(),run].join('-')};
+L.runBase=()=>V.db.seq.run||(+V.db.settings.serialStart||17000);
+L.peek=(it,date,n,mode,vendor,offset)=>{const b=L.runBase()+(offset||0);return Array.from({length:n},(_,i)=>L.sCode(it,date,vendor,b+i+1))};
+L.serial=(it,date,mode,vendor)=>{const b=L.runBase();V.db.seq.run=b+1;return L.sCode(it,date,vendor,b+1)};
 
 // ---- pieces & movements ---------------------------------------------------
 L.addPiece=o=>{const p=Object.assign({u:L.next('u','U',5),status:'in_stock'},o);V.db.pieces.push(p);V.m.piece[p.u]=p;return p};
@@ -36,8 +39,8 @@ L.grnPost=({po,vendor,loc='MAIN',date,lines,by,freight=0,note='',opening=false})
   const d=V.db,no=L.next('grn','GRN/'+L.fy(date)+'/',4);
   const g={no,date,po:po||null,vendor,loc,by:by||V.S.user,freight,note,opening,lines:[],value:0,qc:'Passed'};
   lines.forEach(l=>{const it=V.m.item[l.sku],mode=l.trk||it.trk,acc=l.qty-(l.rej||0),units=[];
-    if(mode==='serial'){for(let i=0;i<acc;i++){const p=L.addPiece({no:L.serial(it,date,mode),trk:'serial',sku:it.sku,vendor,grn:no,loc,qty:1,q0:1,cost:l.costs?l.costs[i]:l.rate,mrp:l.mrps?l.mrps[i]:it.mrp,mkPct:l.mks?l.mks[i].pct:undefined,mkAmt:l.mks?l.mks[i].amt:undefined,since:date,slow:!!l.slow,len:it.len});L.move(p,'GRN','Vendor',loc,no,date,by);units.push(p.u)}}
-    else if(acc>0){const p=L.addPiece({no:L.serial(it,date,mode),trk:'batch',sku:it.sku,vendor,grn:no,loc,qty:acc,q0:acc,cost:l.costs&&l.costs[0]!==undefined?l.costs[0]:l.rate,mrp:l.mrps&&l.mrps[0]?l.mrps[0]:it.mrp,mkPct:l.mks?l.mks[0].pct:undefined,mkAmt:l.mks?l.mks[0].amt:undefined,since:date});L.move(p,'GRN','Vendor',loc,no,date,by,'',acc);units.push(p.u)}
+    if(mode==='serial'){for(let i=0;i<acc;i++){const p=L.addPiece({no:L.serial(it,date,mode,vendor),trk:'serial',sku:it.sku,vendor,grn:no,loc,qty:1,q0:1,cost:l.costs?l.costs[i]:l.rate,mrp:l.mrps?l.mrps[i]:it.mrp,mkPct:l.mks?l.mks[i].pct:undefined,mkAmt:l.mks?l.mks[i].amt:undefined,since:date,slow:!!l.slow,len:it.len});L.move(p,'GRN','Vendor',loc,no,date,by);units.push(p.u)}}
+    else if(acc>0){const p=L.addPiece({no:L.serial(it,date,mode,vendor),trk:'batch',sku:it.sku,vendor,grn:no,loc,qty:acc,q0:acc,cost:l.costs&&l.costs[0]!==undefined?l.costs[0]:l.rate,mrp:l.mrps&&l.mrps[0]?l.mrps[0]:it.mrp,mkPct:l.mks?l.mks[0].pct:undefined,mkAmt:l.mks?l.mks[0].amt:undefined,since:date});L.move(p,'GRN','Vendor',loc,no,date,by,'',acc);units.push(p.u)}
     g.lines.push({sku:l.sku,ordered:l.ordered||l.qty,recv:l.qty,rej:l.rej||0,acc,rate:l.rate,rejReason:l.rejReason||'',units});g.value+=units.reduce((s,u)=>s+V.m.piece[u].cost*V.m.piece[u].q0,0);
     if(po){const pl=V.m.po[po].lines.find(x=>x.sku===l.sku);if(pl)pl.rcv+=l.qty}});
   d.grns.push(g);V.m.grn[no]=g;

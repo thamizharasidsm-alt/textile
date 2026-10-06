@@ -75,12 +75,12 @@ A.barcode=function(code,w=140,h=34){
   while(x<w){const bw=1+Math.floor(r()*3);if(r()>.42)s+=`<rect x="${x}" y="0" width="${bw}" height="${h}"/>`;x+=bw+1}
   return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" fill="#111" aria-label="Barcode ${V.esc(code)}">${s}</svg>`;
 };
-A.qr=function(code,n=21,px=3){
-  const r=V.rng(V.hash(code));let s='';
-  const fin=(x,y)=>`<rect x="${x*px}" y="${y*px}" width="${7*px}" height="${7*px}"/><rect x="${(x+1)*px}" y="${(y+1)*px}" width="${5*px}" height="${5*px}" fill="#fff"/><rect x="${(x+2)*px}" y="${(y+2)*px}" width="${3*px}" height="${3*px}"/>`;
+A.qr=function(code,n,px){px=px||3;
+  if(window.qrcode){try{const q=qrcode(0,'M');q.addData(String(code));q.make();const m=q.getModuleCount(),pad=2;let d='';for(let r=0;r<m;r++)for(let c=0;c<m;c++)if(q.isDark(r,c))d+=`M${c+pad} ${r+pad}h1v1h-1z`;const sz=(m+pad*2),W=sz*px;
+    return `<svg width="${W}" height="${W}" viewBox="0 0 ${sz} ${sz}" shape-rendering="crispEdges" role="img" aria-label="QR ${V.esc(code)}"><rect width="${sz}" height="${sz}" fill="#fff"/><path d="${d}" fill="#000"/></svg>`}catch(e){}}
+  const r=V.rng(V.hash(code));let s='';n=n||21;const fin=(x,y)=>`<rect x="${x*px}" y="${y*px}" width="${7*px}" height="${7*px}"/><rect x="${(x+1)*px}" y="${(y+1)*px}" width="${5*px}" height="${5*px}" fill="#fff"/><rect x="${(x+2)*px}" y="${(y+2)*px}" width="${3*px}" height="${3*px}"/>`;
   for(let y=0;y<n;y++)for(let x=0;x<n;x++){if((x<8&&y<8)||(x>n-9&&y<8)||(x<8&&y>n-9))continue;if(r()>.52)s+=`<rect x="${x*px}" y="${y*px}" width="${px}" height="${px}"/>`}
-  return `<svg width="${n*px}" height="${n*px}" viewBox="0 0 ${n*px} ${n*px}" fill="#111" aria-label="QR ${V.esc(code)}">${s}${fin(0,0)}${fin(n-7,0)}${fin(0,n-7)}</svg>`;
-};
+  return `<svg width="${n*px}" height="${n*px}" viewBox="0 0 ${n*px} ${n*px}" fill="#111" aria-label="QR ${V.esc(code)}">${s}${fin(0,0)}${fin(n-7,0)}${fin(0,n-7)}</svg>`};
 A.setGold=c=>{GOLD=c;A.initPatterns()};
 A.initPatterns();
 })();

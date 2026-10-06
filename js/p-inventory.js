@@ -113,7 +113,7 @@ V.acts.adjNew=()=>V.modal({title:'New Stock Adjustment',wide:true,body:`<div cla
 // ================= LABELS =================
 V.page('labels',{title:'Labels & Tags',crumb:'Inventory',
 render(){const d=V.db,f=V.S.lbl=V.S.lbl||{grn:(d.grns[d.grns.length-1]||{}).no};const g=V.m.grn[f.grn],us=g?g.lines.flatMap(l=>l.units).slice(0,24):[];
- return V.head('Labels & Tags','QR + barcode serial tags with design, weave, certification and MRP. Reprint any GRN or any serial.',`<button class="btn primary" data-act="lblPrint">${V.ic('print')} Print ${us.length} tags</button>`)
+ return V.head('Labels & Tags','Price tags with the serial number (Type-Vendor-Weaver-Year-Default-Running), a scannable QR and the MRP. Reprint any GRN or any serial.',`<button class="btn primary" data-act="lblPrint">${V.ic('print')} Print ${us.length} tags</button>`)
  +`<div class="card flat" style="margin-bottom:18px"><div class="frm" style="grid-template-columns:1fr 1fr;gap:0 16px">${V.field('Choose GRN',`<select data-st="lbl.grn" data-re="1">${V.opts(d.grns.slice().reverse(),f.grn,{v:g=>g.no,l:g=>g.no+' · '+V.fd(g.date)+' · '+V.m.vendor[g.vendor].name})}</select>`)}${V.field('…or a single serial',`<input id="lbs" placeholder="Type serial and press Enter">`)}</div></div>
  <div class="lbl-sheet">${us.map(u=>V.labelHtml(V.m.piece[u])).join('')}</div>`},
 mount(){const i=$('#lbs');if(i)i.addEventListener('keydown',e=>{if(e.key==='Enter'){const p=V.db.pieces.find(x=>x.no===i.value.trim());p?V.printLabels([p.u]):V.toast('Serial not found','bad')}})}});

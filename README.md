@@ -1,4 +1,4 @@
-# LoomLedger — Heritage Saree Inventory, POS & Shopify Sync
+# SthreeCreatives — Heritage Saree Inventory, POS & Shopify Sync
 *A product of MS Tech Services · white-label ready · interactive demo (runs fully in the browser)*
 
 Two editions share one code base; `js/edition.js` decides which one is built:
