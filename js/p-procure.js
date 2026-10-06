@@ -5,7 +5,9 @@ V.setPath=(o,path,val)=>{const k=path.split('.');let t=o;for(let i=0;i<k.length-
 document.addEventListener('change',e=>{const t=e.target;if(t.dataset&&t.dataset.st){let v=t.type==='checkbox'?t.checked:t.value;if(t.type==='number')v=v===''?0:+v;V.setPath(V.S,t.dataset.st,v);if(t.dataset.re)V.refresh()}});
 
 // -------- labels --------
-V.labelHtml=p=>{const it=V.m.item[p.sku];return `<div class="label"><div>${V.art.qr(p.no,17,3)}</div><div><b class="nm">${V.esc(it.name)}</b><div>${V.esc(it.colour)} · ${V.esc(it.fabric)}</div><div>${V.esc(it.region||'')} ${it.cert?'· '+V.esc(it.cert):''}</div><div class="no">${p.no}</div>${V.art.barcode(p.no,150,26)}<div style="margin-top:2px"><b>MRP ${V.inr(p.mrp)}</b> <span style="opacity:.7">(incl. GST)</span></div></div></div>`};
+V.labelHtml=p=>{const run=String(p.no).split('-').pop(),big=p.mrp>=100000;return `<div class="tagx"><i class="hole"></i><div class="co">${V.esc(V.brand.business)}</div><div class="bd"><div class="cd">${V.esc(p.no)}</div><div class="rw"><div class="qb">${V.art.qr(p.no,25,3)}<span>${V.esc(run)}</span></div><div class="pr"><small>₹</small><b style="font-size:${big?'4.9mm':'6mm'}">${Math.round(p.mrp)}/-</b></div></div></div></div>`};
+V.tagCss=`.tagx{position:relative;display:inline-grid;grid-template-columns:8mm 1fr;grid-template-rows:100%;width:62mm;height:36mm;box-sizing:border-box;background:#fff;color:#111;border:.25mm solid #b9b9b9;border-radius:2.2mm;font-family:Arial,Helvetica,sans-serif;overflow:hidden;margin:1.5mm;vertical-align:top;page-break-inside:avoid}.tagx .hole{position:absolute;left:2.3mm;top:2.3mm;width:2.6mm;height:2.6mm;border:.3mm solid #777;border-radius:50%;background:#fff}.tagx .co{writing-mode:vertical-rl;transform:rotate(180deg);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:2.55mm;letter-spacing:.15mm;padding:9mm 0 2mm;white-space:nowrap;overflow:hidden;min-height:0}.tagx .bd{padding:2.8mm 2.5mm 2.8mm 1mm;display:flex;flex-direction:column;justify-content:space-between;min-width:0}.tagx .cd{font-weight:800;font-size:3.35mm;letter-spacing:.1mm;white-space:nowrap;border-bottom:.2mm solid #ddd;padding-bottom:1.2mm}.tagx .rw{display:flex;align-items:center;justify-content:space-between;gap:2mm}.tagx .qb{display:flex;flex-direction:column;align-items:center}.tagx .qb svg{width:13.2mm;height:13.2mm}.tagx .qb span{font-size:2.4mm;font-weight:600;line-height:1;margin-top:.2mm}.tagx .pr{display:flex;align-items:baseline;gap:1mm;white-space:nowrap}.tagx .pr small{font-size:5mm;font-weight:700}.tagx .pr b{font-weight:800}`;
+V.printCss+=V.tagCss;
 V.printLabels=us=>V.printHtml(`<div>${us.map(u=>V.labelHtml(V.m.piece[u])).join('')}</div>`,'Labels');
 
 // ================= PURCHASE ORDERS =================
@@ -71,8 +73,7 @@ render(po){const d=V.db;
 V.acts.grnFresh=()=>{V.S.grn=null};
 V.grnInit=pono=>{const po=pono?V.m.po[pono]:null;V.S.grn={po:pono,vendor:po?po.vendor:'',loc:'MAIN',date:V.db.today,freight:0,step:po?2:1,done:null,
   lines:po?po.lines.filter(l=>l.qty>l.rcv).map(l=>({sku:l.sku,ordered:l.qty,pending:l.qty-l.rcv,qty:l.qty-l.rcv,rej:0,reason:'',rate:l.rate,trk:V.m.item[l.sku].trk,mrps:null})):[]}};
-V.grnPreview=()=>{const g=V.S.grn,off={};return g.lines.map(l=>{const it=V.m.item[l.sku],acc=Math.max(0,l.qty-l.rej),k=V.L.serKey(it,g.date,l.trk),n=l.trk==='serial'?acc:(acc?1:0);const st=(V.db.seq[k.key]||0)+(off[k.key]||0);off[k.key]=(off[k.key]||0)+n;
-  const nos=Array.from({length:n},(_,i)=>k.pre+String(st+i+1).padStart(k.pad,'0'));const need=l.trk==='serial'?acc:(acc?1:0);if(!l.pc||l.pc.length!==need||l.pcRate!==l.rate)V.grnPcInit(l,it,need);return {l,it,acc,nos}})};
+V.grnPreview=()=>{const g=V.S.grn;let off=0;return g.lines.map(l=>{const it=V.m.item[l.sku],acc=Math.max(0,l.qty-l.rej),n=l.trk==='serial'?acc:(acc?1:0),nos=V.L.peek(it,g.date,n,l.trk,g.vendor,off);off+=n;if(!l.pc||l.pc.length!==n||l.pcRate!==l.rate)V.grnPcInit(l,it,n);return {l,it,acc,nos}})};
 // ---- GRN pricing: cost price + markup (% or ₹) -> selling price + GST -> final MRP ----
 V.grnRound=()=>{const g=V.S.grn;return g&&g.round!==undefined?+g.round:100};
 V.grnCalc=(r,gst)=>{const rd=V.grnRound(),sp=(+r.cost||0)+(+r.amt||0),gs=sp*gst/100,raw=sp+gs;return {sp,gs,mrp:rd>0?Math.round(raw/rd)*rd:Math.round(raw)}};
@@ -134,7 +135,7 @@ V.acts.lpNew=()=>V.modal({title:'New Local Purchase',wide:true,body:`<div class=
   foot:[{l:'Cancel'},{l:'Save',cls:'primary',fn:()=>{const v=V.formVals($('#mbg'));if(!V.need(v,['desc','rate']))return false;const amt=+v.qty*+v.rate,no='LP-'+String(V.db.localPurchases.length+1).padStart(4,'0');
    V.db.localPurchases.push({no,date:V.db.today,vendor:v.vendor,loc:V.S.loc,category:v.category,desc:v.desc,qty:+v.qty,rate:+v.rate,amt,gst:Math.round(amt*.18/1.18),mode:v.mode,bill:v.bill,stockIn:v.stockIn,by:V.S.user});
    if(v.mode==='Cash'){const r=V.L.drawer(V.S.loc,V.db.today);if(r.status==='open')r.entries.push({t:'out',amt,reason:'Local purchase '+no,time:V.now(),by:V.S.user})}
-   if(v.stockIn){const it=V.m.item['ACC-BLS'];const p=V.L.addPiece({no:V.L.serial(it,V.db.today,'batch'),trk:'batch',sku:'ACC-BLS',vendor:v.vendor,grn:no,loc:V.S.loc,qty:+v.qty,q0:+v.qty,cost:+v.rate,mrp:it.mrp,since:V.db.today});V.L.move(p,'GRN','Local',V.S.loc,no,V.db.today,V.S.user)}
+   if(v.stockIn){const it=V.m.item['ACC-BLS'];const p=V.L.addPiece({no:V.L.serial(it,V.db.today,'batch',v.vendor),trk:'batch',sku:'ACC-BLS',vendor:v.vendor,grn:no,loc:V.S.loc,qty:+v.qty,q0:+v.qty,cost:+v.rate,mrp:it.mrp,since:V.db.today});V.L.move(p,'GRN','Local',V.S.loc,no,V.db.today,V.S.user)}
    V.L.audit('Local purchase',no);V.save();V.toast(no+' saved');V.refresh()}}]});
 
 // ================= VENDOR LEDGER =================

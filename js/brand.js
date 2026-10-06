@@ -1,7 +1,7 @@
 /* White-label branding: name, tagline, logo, colours — persisted separately from demo data */
 (function(){
 const KEY='lk_brand'+(V.basic?'_basic':'');
-const DEF={name:'LoomLedger',tag:'Heritage Retail Suite',by:'MS Tech Services',business:'Meenakshi Heritage Handlooms',owner:'Meenakshi',mono:'LL',primary:'#7A1F3D',accent:'#B8893A',logo:''};
+const DEF={name:'SthreeCreatives',tag:'Heritage Retail Suite',by:'MS Tech Services',business:'Sthree Creatives',owner:'Meenakshi',mono:'SC',primary:'#7A1F3D',accent:'#B8893A',logo:''};
 V.BRAND_DEF=DEF;
 V.brand=Object.assign({},DEF);
 try{const s=localStorage.getItem(KEY);if(s)Object.assign(V.brand,JSON.parse(s))}catch(e){}
