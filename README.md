@@ -26,10 +26,10 @@ Two editions share one code base; `js/edition.js` decides which one is built:
 | Photos | Optional product photos (Settings toggle) | same |
 | Pricing & print | GRN pricing: cost price + markup (% or ₹) → selling price + GST → auto final MRP (rounding option); 40-column thermal receipt (80 mm) and A4 invoice | same |
 
-## Run locally
-```bash
-python -m http.server 8080   # then open http://localhost:8080
-```
+## Run locally (offline — for client demos)
+Double-click **`Start-Demo.bat`** (Windows). It serves this folder at `http://localhost:8090` and opens the browser — no internet, Python or installation needed (charts, Excel, QR and fonts are bundled in `vendor/` and `fonts/`). Keep the black window open during the demo; close it to stop.
+
+Other platforms: `python -m http.server 8090` in this folder.
 
 ## White-label
 Name, tagline, logo, colours, client business and owner name are configurable (Settings → White-label branding; in the Basic build open Settings with `?admin` in the URL). Defaults live in `js/brand.js`.

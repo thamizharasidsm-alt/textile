@@ -15,6 +15,10 @@ const TEMPLATE_HEAD=['Vendor Code','Design SKU','Qty','Rate','Expected Date','Re
 const normKey=k=>String(k).toLowerCase().replace(/[^a-z0-9]/g,'');
 const parseCsv=t=>{const rows=[];let r=[],c='',q=false;for(let i=0;i<t.length;i++){const ch=t[i];if(q){if(ch==='"'&&t[i+1]==='"'){c+='"';i++}else if(ch==='"')q=false;else c+=ch}else if(ch==='"')q=true;else if(ch===','){r.push(c);c=''}else if(ch==='\n'||ch==='\r'){if(ch==='\r'&&t[i+1]==='\n')i++;r.push(c);rows.push(r);r=[];c=''}else c+=ch}if(c||r.length){r.push(c);rows.push(r)}
   const h=rows.shift().map(x=>x.trim());return rows.filter(x=>x.some(y=>y.trim())).map(x=>Object.fromEntries(h.map((k,i)=>[k,x[i]])))};
+V.parseCsv=parseCsv;
+// Read an uploaded .xlsx / .xls / .csv into an array of {header: value} rows
+V.readTable=f=>new Promise((res,rej)=>{if(/\.csv$/i.test(f.name)){f.text().then(t=>res(parseCsv(t))).catch(rej);return}
+  if(!window.XLSX){rej(new Error('Excel reader not loaded — save as CSV'));return}const r=new FileReader();r.onerror=rej;r.onload=()=>{try{const wb=XLSX.read(r.result,{type:'array',cellDates:true});res(XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:''}))}catch(e){rej(e)}};r.readAsArrayBuffer(f)});
 const sampleRows=()=>{const t=V.addDays(V.db.today,14);return [['V-KJV','KJV-01',8,'62000',t,'Festive season lot'],['V-KJV','KJV-03',6,'',t,'Rate to be confirmed'],['V-BNR','BNR-02',7,'54000',t,''],['V-BNR','BNR-99',4,'60000',t,'Unknown SKU (demo error)'],['V-PTL','PTL-01',4,'182000',V.addDays(V.db.today,30),'Advance paid'],['V-JMD','JMD-02',10,'24500',t,''],['V-XYZ','POC-01',5,'18000',t,'Unknown vendor (demo error)']].map(r=>Object.fromEntries(TEMPLATE_HEAD.map((h,i)=>[h,r[i]])))};
 const toIso=v=>{if(v instanceof Date)return V.iso(v);if(typeof v==='number'&&v>20000)return V.iso(new Date(Math.round((v-25569)*864e5)));const s=String(v||'').trim();if(/^\d{4}-\d{2}-\d{2}$/.test(s))return s;const m=s.match(/^(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})$/);return m?`${m[3]}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}`:''};
 V.validatePoRows=raw=>{const d=V.db;return raw.map((o,i)=>{const g=n=>{const k=Object.keys(o).find(x=>normKey(x)===normKey(n));return k?o[k]:''};
