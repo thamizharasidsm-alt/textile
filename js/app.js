@@ -25,7 +25,7 @@ function pill(id){const d=V.db;if(id==='approvals'){const n=d.approvals.filter(a
 function renderSide(cur){
   $('#side').innerHTML=`<a class="brand" href="#/dashboard" aria-label="${V.esc(V.brand.name)} home"><span class="logo">${V.brandMark(42)}</span><span><b>${V.esc(V.brand.name)}</b><small>${V.esc(V.brand.tag)}</small></span></a><div class="temple" aria-hidden="true"></div>
   <nav class="nav">${V.navFor().map(g=>`<h6>${g[0]}</h6>${g[1].map(i=>`<a href="#/${i[0]}" class="${cur===i[0]?'on':''}" ${cur===i[0]?'aria-current="page"':''}>${V.ic(i[2])}<span>${i[1]}</span>${pill(i[0])}</a>`).join('')}`).join('')}</nav>
-  <div class="side-foot">${V.esc(V.brand.business)}<br><span style="opacity:.75">${V.brand.by?'Powered by '+V.esc(V.brand.by)+' · ':''}Demo · data stays in your browser</span></div>`}
+  <div class="side-foot">${V.esc(V.brand.business)}<br><span style="opacity:.75">${V.brand.by?'Powered by '+V.esc(V.brand.by)+' · ':''}Demo · data stays in your browser · build ${V.BUILD}</span></div>`}
 function renderTop(title,crumb){
   const locs=V.locOptions();
   $('#top').innerHTML=`<button class="iconbtn menu-btn" data-act="toggleNav" aria-label="Open menu">${V.ic('menu')}</button><div><span class="crumb">${crumb||V.esc(V.brand.name)}</span><span class="ttl">${title}</span></div><div class="sp"></div>
