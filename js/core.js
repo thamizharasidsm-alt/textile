@@ -1,6 +1,6 @@
 /* core: namespace, utils, icons */
 (function(){
-const V = window.V = {pages:{},acts:{},rep:[],charts:[],tbl:{},S:{loc:null,theme:null}};
+const V = window.V = {BUILD:'20261010b',pages:{},acts:{},rep:[],charts:[],tbl:{},S:{loc:null,theme:null}};
 V.page=(name,o)=>{if(o)V.pages[name]=o;return V.pages[name]};
 V.$=(s,r=document)=>r.querySelector(s);
 V.$$=(s,r=document)=>[...r.querySelectorAll(s)];
