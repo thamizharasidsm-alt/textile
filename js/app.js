@@ -41,11 +41,13 @@ function route(){
   V.destroyCharts();V.L.idx();document.body.classList.remove('nav-open');
   renderSide(cur);
   const t=typeof pg.title==='function'?pg.title(...args):pg.title;renderTop(t,pg.crumb);
-  const v=$('#view');
+  const v=$('#view'),prevNav=$('.rep-nav'),navTop=prevNav?prevNav.scrollTop:null;
   try{v.innerHTML=pg.render(...args)}catch(e){console.error(e);v.innerHTML=`<div class="card"><h3>Something went wrong</h3><p class="mute">${V.esc(e.message)}</p></div>`}
   v.classList.remove('fade');void v.offsetWidth;v.classList.add('fade');
   try{pg.mount&&pg.mount(...args)}catch(e){console.error(e)}
   V.unlink(v);V.countUp(v);window.scrollTo(0,0);
+  // keep the Reports list where the user scrolled it, and make sure the selected report is visible
+  const nn=$('.rep-nav');if(nn){if(navTop!==null)nn.scrollTop=navTop;const on=nn.querySelector('a.on');if(on){const r=on.getBoundingClientRect(),c=nn.getBoundingClientRect();if(r.top<c.top+8)nn.scrollTop-=c.top+8-r.top;else if(r.bottom>c.bottom-8)nn.scrollTop+=r.bottom-c.bottom+8}}
 }
 
 // ---- global events
